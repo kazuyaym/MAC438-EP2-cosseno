@@ -1,0 +1,47 @@
+/**********************************/
+/* EP 2 - Programação Concorrente */
+/*                                */
+/* Marcos Kazuya          7577622 */
+/* LEIAME.txt                     */
+/*                                */
+/**********************************/
+
+- Este diretório contém os seguintes arquivos:
+
+ep2.c
+makefile
+relatório.pdf
+
+- Instalação:
+
+Para instalar, utilize o Makefile. Basta digitar make para criar o executével.
+
+- Utilização:
+
+O programa aceita até cincos argumentos de entradas, são eles:
+./ep2 <number of threads> <m|f> <precisao> <cos (x)> <opcional: d|s>
+
+- Como são feitos os calculos:
+
+No modo paralelo, o calculo do cosseno é feito através da criação de threads em que cada thread calcula um termo da fórmula de Taylor,  e para evitar a execução de cálculos repetidos, os processos que calcularão um termo maior vão esperar aqueles que estão calculando um termo menor. Porém cada processo calcula um termo que um processor anterior não precisaria calcular.
+
+- Um exemplo com 4 threads:
+
+A primeira thread não precisa fazer cálculos, pois sempre na primeira iteracão da fórmula de Taylor o valor é 1.
+
+A segunda thread o valor de n valerá 1, precisaremos calcular apenas (x*x)/(2*1) e multiplicar com o termo anterior.
+
+A terceira thread,  o valor de n será 2, ou seja, valor calcular (x*x)/(4*3) e multiplicar com o termo anterior.
+ 
+A quarta thread, o valor de n será 3, ou seja, basta calcular (x*x)/(6*5) e multiplicar com o termo anterior. Que assim nessa thread o termo de Taylor será [(x*x)/(6*5)]*[(x*x)/(4*3)]*[(x*x)/(2*1)]*1, que será x^(2n)/(2n)! = (x^6)/(6!).
+
+- Semáforos:
+
+O semáforo da primeira thread é inicializada com 1, para que ela possa ser executada por primeira, e assim que ela terminar de acessar a seção critica, ela libera para o segundo processo poder rodar, e assim por diante. Quando o último prcesso sair da seção crítica, ela vai liberar o semáforo para o primeiro processo rodar novamente na próxima iteração, ja que o processo 1 está parado na barreira.
+
+Na seção crítica, basicamente é calculado o novo valor do termo de Taylor e adicionado ou subtraido ao valor final de cos(x). 
+
+- Barreiras: 
+
+Na barreira, esperamos todos os processos chegarem, decrementando a variável arrive, que sempre no começo de cada iteração é setado com o número de threads que foram criados, enquanto o último processo não chega na barreira, todos os outros processos ficam "dormindo".
+Quando o último processo chegar na barreira fazemos as devidas comparações para ver se o programa deve ou não terminar, acorda todos os outros processos e vai para uma próxima iteração caso o programa ainda não terminou.
